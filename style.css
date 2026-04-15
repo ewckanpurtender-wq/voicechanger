@@ -290,6 +290,104 @@ input[type="range"]::-webkit-slider-thumb:hover {
     transform: scale(1.2);
 }
 
+/* Settings Panel & Radio Customization */
+.settings-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.settings-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.setting-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.radio-container {
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding-left: 35px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    user-select: none;
+    transition: color 0.2s;
+}
+
+.radio-container:hover {
+    color: var(--text-main);
+}
+
+.radio-container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.radio-mark {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    height: 20px;
+    width: 20px;
+    background-color: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+}
+
+.radio-container:hover input ~ .radio-mark {
+    background-color: rgba(255,255,255,0.1);
+}
+
+.radio-container input:checked ~ .radio-mark {
+    background-color: var(--accent-primary);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 10px rgba(0, 210, 255, 0.4);
+}
+
+.radio-mark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.radio-container input:checked ~ .radio-mark:after {
+    display: block;
+}
+
+.radio-container .radio-mark:after {
+    top: 5px;
+    left: 5px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: white;
+}
+
+.divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0.5rem 0;
+}
+
+.bluetooth-btn {
+    margin-top: 0.5rem;
+    width: 100%;
+    border: 1px solid rgba(58, 123, 213, 0.3) !important;
+}
+
+.bluetooth-btn:hover {
+    box-shadow: 0 0 15px rgba(58, 123, 213, 0.3) !important;
+}
+
 /* Effects Grid */
 .effects-panel {
     grid-column: span 2;
