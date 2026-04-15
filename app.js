@@ -23,6 +23,9 @@ class VoiceChanger {
         this.intensity = 0.5;
         this.effectName = 'normal';
         this.timerInterval = null;
+        this.noiseReductionEnabled = false;
+        this.noiseFilter = null;
+        this.humFilter = null;
         
         // Active modulation sources for cleanup
         this.activeModules = [];
@@ -44,6 +47,8 @@ class VoiceChanger {
         this.micStatus = document.getElementById('mic-status');
         this.currentEffectLabel = document.getElementById('current-effect-name');
         this.visualizerCanvas = document.getElementById('visualizer');
+        this.noiseReduceBtn = document.getElementById('noise-reduce-btn');
+        this.noiseReduceText = document.getElementById('noise-reduce-text');
         
         this.volumeText = document.getElementById('volume-val');
         this.intensityText = document.getElementById('intensity-val');
@@ -56,6 +61,18 @@ class VoiceChanger {
         
         this.playPauseBtn.addEventListener('click', () => this.togglePlayback());
         this.recordBtn.addEventListener('click', () => this.toggleRecording());
+        
+        if (this.noiseReduceBtn) {
+            this.noiseReduceBtn.addEventListener('click', () => {
+                this.noiseReductionEnabled = !this.noiseReductionEnabled;
+                this.noiseReduceText.innerText = `Noise Reduction: ${this.noiseReductionEnabled ? 'ON' : 'OFF'}`;
+                this.noiseReduceBtn.style.color = this.noiseReductionEnabled ? 'var(--accent-primary)' : 'white';
+                if (this.isPlaying) {
+                    this.applyEffect(this.effectName);
+                }
+            });
+        }
+
         
         this.volumeSlider.addEventListener('input', (e) => {
             const val = e.target.value;
@@ -191,6 +208,15 @@ class VoiceChanger {
             this.currentEffectNode.output.disconnect();
         }
 
+        if (this.noiseFilter) {
+            try { this.noiseFilter.disconnect(); } catch(e) {}
+            this.noiseFilter = null;
+        }
+        if (this.humFilter) {
+            try { this.humFilter.disconnect(); } catch(e) {}
+            this.humFilter = null;
+        }
+
         this.activeModules.forEach(mod => {
             try { mod.stop(); } catch(e) {}
             mod.disconnect();
@@ -222,7 +248,27 @@ class VoiceChanger {
 
         if (!source) return;
 
-        source.connect(effect.input);
+        let nodeToProcess = source;
+
+        if (this.noiseReductionEnabled) {
+            // Apply a simple noise gate/reduction using compressor and highpass
+            this.noiseFilter = this.audioCtx.createDynamicsCompressor();
+            this.noiseFilter.threshold.value = -50;
+            this.noiseFilter.knee.value = 40;
+            this.noiseFilter.ratio.value = 12;
+            this.noiseFilter.attack.value = 0;
+            this.noiseFilter.release.value = 0.25;
+
+            this.humFilter = this.audioCtx.createBiquadFilter();
+            this.humFilter.type = 'highpass';
+            this.humFilter.frequency.value = 80;
+
+            source.connect(this.humFilter);
+            this.humFilter.connect(this.noiseFilter);
+            nodeToProcess = this.noiseFilter;
+        }
+
+        nodeToProcess.connect(effect.input);
         effect.output.connect(this.analyser);
         this.analyser.connect(this.masterGain);
         this.masterGain.connect(this.audioCtx.destination);
